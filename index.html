@@ -255,7 +255,7 @@
     </div>
 
     <script>
-        const socket = new WebSocket('ws://targettakedown.onrender.com/');
+        const socket = new WebSocket(location.origin.replace(/^http/, 'ws'));
         let gameCode, playerNumber, roundCount = 0;
         let selectedNumber = null;
         let countdownInterval = null;
