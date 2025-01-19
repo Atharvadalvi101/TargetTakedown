@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Target Takedown</title>
-  <style>
+    <style>
+        /* ... (keep all existing styles) ... */
         * {
             margin: 0;
             padding: 0;
@@ -209,10 +210,32 @@
             text-align: center;
             margin-top: 20px;
         }
-    </style>>
+
+        /* Add style for losing score warning */
+
+        .danger-score {
+            color: #e63946;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
 </head>
 
 <body>
+    <!-- Keep all existing HTML structure the same -->
     <div class="container">
         <video autoplay muted loop id="myVideo">
             <source src="Render_1.mp4" type="video/mp4">
@@ -232,7 +255,7 @@
             <p>3. The player closest to this final number wins.</p>
             <p>4. Losing player gets -1 point.</p>
             <p>5. You have 45 seconds to choose a number each round.</p>
-            <p>6. If you don't pick a number in time, you lose a point.</p>
+            <p>6. If you don't pick a number in time, you lose points.</p>
             <p>7. The game ends after 15 rounds or when a player reaches -10 points.</p>
         </div>
     </div>
@@ -333,6 +356,8 @@
                 btn.classList.remove('selected-number');
                 btn.disabled = false;
             });
+            document.getElementById('resultDisplay').innerHTML = '';
+            document.getElementById('message').innerText = '';
             startCountdown(45);
         }
 
@@ -363,12 +388,25 @@
             socket.send(JSON.stringify({ type: 'number', gameCode, playerNumber, number }));
         }
 
+        function updateScores(scores) {
+            const player1Score = document.getElementById('player1Points');
+            const player2Score = document.getElementById('player2Points');
+
+            player1Score.innerText = scores[0];
+            player2Score.innerText = scores[1];
+
+            // Add visual warning for low scores
+            player1Score.classList.toggle('danger-score', scores[0] <= -7);
+            player2Score.classList.toggle('danger-score', scores[1] <= -7);
+        }
+
         function handleTimeout(data) {
             const { scores } = data;
-            document.getElementById('player1Points').innerText = scores[0];
-            document.getElementById('player2Points').innerText = scores[1];
+            updateScores(scores);
             document.getElementById('message').innerText = `Time's up! Points updated.`;
-            setTimeout(() => handleRoundStart(), 2000); // Restart new round
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
         }
 
         function handleResult(data) {
@@ -381,15 +419,28 @@
                 <p>Average: ${average.toFixed(2)}</p>
                 <p>Target: ${target.toFixed(2)}</p>
                 <p>Winner: Player ${winner}</p>`;
-            document.getElementById('player1Points').innerText = scores[0];
-            document.getElementById('player2Points').innerText = scores[1];
-            setTimeout(() => handleRoundStart(), 2000); // Restart new round
+
+            updateScores(scores);
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
         }
 
         function handleGameOver(data) {
-            window.alert(`Game Over! Winner: ${data.winner}`);
-            location.reload();
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            // Redirect to the game over page with the winner's name
+            window.location.href = `gameover.html?winner=${encodeURIComponent(data.winner)}`;
         }
+
+        // Add window cleanup
+        window.onbeforeunload = () => {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            socket.close();
+        };
     </script>
 </body>
 
