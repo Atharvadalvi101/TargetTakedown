@@ -16,40 +16,47 @@
 
         body {
             color: #ffffff;
-            overflow: hidden;
-            /* Prevent scrolling during animation */
+            overflow-x: hidden;
+            min-height: 100vh;
         }
 
+        /* Background Video */
+        #myVideo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -1;
+            object-fit: cover;
+        }
+
+        /* Setup Screen */
         #setup {
-            max-width: 600px;
-            margin: 50px auto;
+            max-width: 90%;
+            margin: 20px auto;
             text-align: center;
-            padding: 20px;
+            padding: 15px;
             background: #2a2a2ad8;
             border-radius: 10px;
             position: relative;
-            /* Position relative for animation */
-            top: -100%;
-            /* Start off-screen */
-            transition: top 1s ease;
-            /* Animate the top property */
+            animation: slideDown 1s ease forwards;
+            top: 0;
         }
 
-        h1 {
-            color: #e63946;
-            margin-bottom: 30px;
-            white-space: nowrap;
-            /* Prevent line breaks */
-            overflow: hidden;
-            /* Hide overflow for typewriter effect */
-            border-right: 4px solid #e63946;
-            /* Cursor effect */
-            width: 0;
-            /* Start with width 0 for typewriter effect */
-            animation: typing 4s steps(30, end) forwards, blink-caret 0.75s step-end infinite;
-            /* Typewriter and blinking cursor */
+        @keyframes slideDown {
+            from {
+                top: -100%;
+            }
+
+            to {
+                top: 0;
+            }
         }
 
+        /* Title Animation */
         @keyframes typing {
             from {
                 width: 0;
@@ -72,6 +79,21 @@
             }
         }
 
+        #setup h1 {
+            color: #e63946;
+            margin: 0 auto 20px;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            white-space: nowrap;
+            overflow: hidden;
+            border-right: 4px solid #e63946;
+            width: 0;
+            display: inline-block;
+            animation:
+                typing 3s steps(30, end) forwards,
+                blink-caret 0.75s step-end infinite;
+        }
+
+        /* Input Elements */
         button {
             background: #e63946;
             color: white;
@@ -81,10 +103,16 @@
             margin: 10px;
             cursor: pointer;
             transition: background 0.3s;
+            font-size: clamp(0.875rem, 2vw, 1rem);
         }
 
         button:hover {
-            background: #dc2f3c;
+            background: #c1121f;
+        }
+
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
         }
 
         input {
@@ -92,127 +120,119 @@
             margin: 10px;
             border: none;
             border-radius: 5px;
-            width: 200px;
+            width: min(200px, 80%);
+            font-size: clamp(0.875rem, 2vw, 1rem);
         }
 
+        /* Game Screen */
         #game {
             display: none;
-            padding: 20px;
+            padding: 10px;
             position: relative;
+            margin-top: 60px;
         }
 
+        /* Sidebars */
         .sidebar {
             position: fixed;
-            width: 200px;
-            padding: 20px;
+            width: min(200px, 45%);
+            padding: 15px;
             background: #2a2a2a;
             border-radius: 10px;
             transition: all 0.3s;
+            font-size: clamp(0.875rem, 2vw, 1rem);
+            z-index: 10;
         }
 
         #player1Sidebar {
-            left: 20px;
-            top: 20px;
+            left: 10px;
+            top: 10px;
         }
 
         #player2Sidebar {
-            right: 20px;
-            top: 20px;
+            right: 10px;
+            top: 10px;
         }
 
-        .highlight {
-            box-shadow: 0 0 20px #4CAF50;
-        }
-
-        .losing {
-            box-shadow: 0 0 20px #e63946;
-        }
-
+        /* Game Elements */
         .result {
             text-align: center;
             margin: 20px auto;
-            padding: 20px;
+            padding: 15px;
             background: #2a2a2a;
             border-radius: 10px;
-            max-width: 600px;
+            max-width: 90%;
+            font-size: clamp(0.875rem, 2vw, 1rem);
         }
 
         #countdown {
             position: fixed;
-            top: 20px;
+            top: 10px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 24px;
+            font-size: clamp(1.25rem, 4vw, 1.5rem);
             color: #e63946;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 15px;
+            border-radius: 5px;
         }
 
+        /* Numpad */
         .numpad-container {
             display: grid;
-            grid-template-columns: repeat(10, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
             gap: 5px;
-            max-width: 800px;
-            margin: 100px auto 20px;
-            padding: 20px;
+            max-width: 90%;
+            margin: 80px auto 20px;
+            padding: 15px;
             background: #2a2a2a;
             border-radius: 10px;
         }
 
         .number {
-            padding: 10px;
-            font-size: 14px;
+            padding: 8px;
+            font-size: clamp(0.75rem, 2vw, 0.875rem);
             background: #333;
-        }
-
-        .number:hover {
-            background: #444;
-        }
-
-        #rules {
-            margin-top: 20px;
-            text-align: left;
-            padding: 20px;
-            background: #333;
-            border-radius: 10px;
-            line-height: 1.6;
-        }
-
-        #startCountdown {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 72px;
-            color: #e63946;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 40px;
-            border-radius: 10px;
-            display: none;
-        }
-
-        #myVideo {
-            content: "";
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: -1;
-            background-attachment: fixed;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .selected-number {
             background: #e63946 !important;
         }
 
+        /* Rules Section */
+        #rules {
+            margin-top: 20px;
+            text-align: left;
+            padding: 15px;
+            background: #333;
+            border-radius: 10px;
+            line-height: 1.6;
+            font-size: clamp(0.875rem, 2vw, 1rem);
+        }
+
+        #rules h3 {
+            margin-bottom: 10px;
+        }
+
+        #rules p {
+            margin-bottom: 5px;
+        }
+
+        /* Message Display */
         #message {
             color: #e63946;
             text-align: center;
             margin-top: 20px;
+            padding: 0 10px;
+            font-size: clamp(0.875rem, 2vw, 1rem);
         }
 
-        /* Add style for losing score warning */
-
+        /* Score Animation */
         .danger-score {
             color: #e63946;
             animation: pulse 1s infinite;
@@ -229,6 +249,53 @@
 
             100% {
                 opacity: 1;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            #setup h1 {
+                white-space: normal;
+                border-right: none;
+                width: auto;
+                animation: none;
+                text-align: center;
+                display: block;
+            }
+
+            .numpad-container {
+                grid-template-columns: repeat(5, 1fr);
+                margin-top: 120px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: calc(50% - 20px);
+                padding: 10px;
+            }
+
+            .result {
+                margin-top: 100px;
+            }
+
+            #rules {
+                font-size: 0.875rem;
+            }
+
+            .number {
+                padding: 5px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 600px) {
+            #game {
+                margin-top: 80px;
+            }
+
+            .numpad-container {
+                grid-template-columns: repeat(10, 1fr);
+                margin-top: 100px;
             }
         }
     </style>
