@@ -50,9 +50,11 @@ wss.on('connection', (ws) => {
     function handleCreateGame(ws, data) {
         gameCode = generateGameCode();
         games[gameCode] = {
-            players: [{ username: data.username, socket: ws, score: 0, number: null }],
-            timerActive: false,
-            round: 0
+            players: [
+                { username: data.username, socket: ws, score: 0, number: null }
+            ],
+            isTimeout: false,
+            round: 0,
         };
         ws.send(JSON.stringify({ type: 'gameCode', gameCode }));
     }
@@ -71,6 +73,8 @@ wss.on('connection', (ws) => {
                     })
                 );
             });
+
+            startNextRound(game);
         }
     }
 
@@ -81,7 +85,7 @@ wss.on('connection', (ws) => {
         const player = game.players[data.playerNumber - 1];
         player.number = data.number;
 
-        if (game.players.every((p) => p.number !== null)) {
+        if (game.players.every((p) => p.number !== null) && !game.isTimeout) {
             calculateResult(data.gameCode);
         }
     }
@@ -90,12 +94,17 @@ wss.on('connection', (ws) => {
         const game = games[data.gameCode];
         if (!game) return;
 
+        game.isTimeout = true;
+
+        // Deduct points only for players who didn't choose a number
         game.players.forEach((player) => {
             if (player.number === null) {
                 player.score -= 1;
+                checkGameOver(game);
             }
         });
 
+        // Send current scores to all players
         game.players.forEach((player) => {
             player.socket.send(
                 JSON.stringify({
@@ -105,25 +114,32 @@ wss.on('connection', (ws) => {
             );
         });
 
-        // Reset for the next round
-        startNextRound(game);
+        if (!checkGameOver(game)) {
+            setTimeout(() => startNextRound(game), 2000);
+        }
     }
 
     function calculateResult(gameCode) {
         const game = games[gameCode];
-        const numbers = game.players.map((p) => p.number || 0);
+        if (game.isTimeout) return;
+
+        const numbers = game.players.map((p) => p.number);
         const average = numbers.reduce((sum, num) => sum + num, 0) / 2;
         const target = average * 0.8;
 
-        const winnerIndex = numbers
-            .map((num) => Math.abs(num - target))
-            .indexOf(Math.min(...numbers.map((num) => Math.abs(num - target))));
+        const winnerIndex = game.players
+            .map((p, i) => ({ diff: Math.abs(p.number - target), index: i }))
+            .reduce((min, curr) => (curr.diff < min.diff ? curr : min), { diff: Infinity, index: -1 })
+            .index;
 
-        game.players.forEach((player, index) => {
-            if (index !== winnerIndex) {
-                player.score -= 1;
-            }
-        });
+        if (winnerIndex !== -1) {
+            game.players.forEach((player, index) => {
+                if (index !== winnerIndex) {
+                    player.score -= 1;
+                    checkGameOver(game);
+                }
+            });
+        }
 
         game.players.forEach((player) => {
             player.socket.send(
@@ -138,14 +154,41 @@ wss.on('connection', (ws) => {
             );
         });
 
-        // Start the next round after a delay
-        setTimeout(() => startNextRound(game), 2000);
+        if (!checkGameOver(game)) {
+            setTimeout(() => startNextRound(game), 2000);
+        }
+    }
+
+    function checkGameOver(game) {
+        const loserIndex = game.players.findIndex(player => player.score <= -10);
+        
+        if (loserIndex !== -1) {
+            // Get the winner (the other player)
+            const winnerIndex = loserIndex === 0 ? 1 : 0;
+            const winner = game.players[winnerIndex].username;
+            
+            // Send game over message to both players
+            game.players.forEach((player) => {
+                player.socket.send(
+                    JSON.stringify({
+                        type: 'gameOver',
+                        winner: winner
+                    })
+                );
+            });
+
+            // Clean up the game
+            delete games[gameCode];
+            return true;
+        }
+        return false;
     }
 
     function startNextRound(game) {
         game.players.forEach((player) => {
             player.number = null;
         });
+        game.isTimeout = false;
 
         game.players.forEach((player) => {
             player.socket.send(
