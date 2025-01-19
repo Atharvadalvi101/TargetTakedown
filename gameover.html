@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Over</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #1a1a1a;
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+        }
+        h1 {
+            font-size: 72px;
+            color: #e63946;
+        }
+        h2 {
+            font-size: 36px;
+            color: #fff;
+        }
+        button {
+            background: #e63946;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #dc2f3c;
+        }
+    </style>
+</head>
+<body>
+    <h1>Game Over</h1>
+    <h2 id="winnerText"></h2>
+    <button onclick="restartGame()">Play Again</button>
+
+    <script>
+        // Get the URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const winner = urlParams.get('winner');
+
+        // Display the winner's name
+        document.getElementById('winnerText').innerText = `Winner: ${winner}`;
+
+        function restartGame() {
+            // Redirect to the main game page (index.html)
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Target Takedown</title>
+  <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        body {
+            color: #ffffff;
+            overflow: hidden;
+            /* Prevent scrolling during animation */
+        }
+
+        #setup {
+            max-width: 600px;
+            margin: 50px auto;
+            text-align: center;
+            padding: 20px;
+            background: #2a2a2ad8;
+            border-radius: 10px;
+            position: relative;
+            /* Position relative for animation */
+            top: -100%;
+            /* Start off-screen */
+            transition: top 1s ease;
+            /* Animate the top property */
+        }
+
+        h1 {
+            color: #e63946;
+            margin-bottom: 30px;
+            white-space: nowrap;
+            /* Prevent line breaks */
+            overflow: hidden;
+            /* Hide overflow for typewriter effect */
+            border-right: 4px solid #e63946;
+            /* Cursor effect */
+            width: 0;
+            /* Start with width 0 for typewriter effect */
+            animation: typing 4s steps(30, end) forwards, blink-caret 0.75s step-end infinite;
+            /* Typewriter and blinking cursor */
+        }
+
+        @keyframes typing {
+            from {
+                width: 0;
+            }
+
+            to {
+                width: 100%;
+            }
+        }
+
+        @keyframes blink-caret {
+
+            from,
+            to {
+                border-color: transparent;
+            }
+
+            50% {
+                border-color: #e63946;
+            }
+        }
+
+        button {
+            background: #e63946;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            margin: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #dc2f3c;
+        }
+
+        input {
+            padding: 10px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            width: 200px;
+        }
+
+        #game {
+            display: none;
+            padding: 20px;
+            position: relative;
+        }
+
+        .sidebar {
+            position: fixed;
+            width: 200px;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        #player1Sidebar {
+            left: 20px;
+            top: 20px;
+        }
+
+        #player2Sidebar {
+            right: 20px;
+            top: 20px;
+        }
+
+        .highlight {
+            box-shadow: 0 0 20px #4CAF50;
+        }
+
+        .losing {
+            box-shadow: 0 0 20px #e63946;
+        }
+
+        .result {
+            text-align: center;
+            margin: 20px auto;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 10px;
+            max-width: 600px;
+        }
+
+        #countdown {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            color: #e63946;
+        }
+
+        .numpad-container {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 5px;
+            max-width: 800px;
+            margin: 100px auto 20px;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 10px;
+        }
+
+        .number {
+            padding: 10px;
+            font-size: 14px;
+            background: #333;
+        }
+
+        .number:hover {
+            background: #444;
+        }
+
+        #rules {
+            margin-top: 20px;
+            text-align: left;
+            padding: 20px;
+            background: #333;
+            border-radius: 10px;
+            line-height: 1.6;
+        }
+
+        #startCountdown {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 72px;
+            color: #e63946;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        #myVideo {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+            background-attachment: fixed;
+        }
+
+        .selected-number {
+            background: #e63946 !important;
+        }
+
+        #message {
+            color: #e63946;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>>
+</head>
+
+<body>
+    <div class="container">
+        <video autoplay muted loop id="myVideo">
+            <source src="Render_1.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <div id="setup">
+        <h1>Welcome to, Target Takedown</h1>
+        <button id="createGame">Create Game</button>
+        <input type="text" id="gameCodeInput" placeholder="Enter Game Code">
+        <button id="joinGame">Join Game</button>
+        <div id="codeDisplay"></div>
+        <div id="rules">
+            <h3>Game Rules:</h3>
+            <p>1. Each round, both players pick a number between 0-100.</p>
+            <p>2. The average of both numbers will be multiplied by 0.8.</p>
+            <p>3. The player closest to this final number wins.</p>
+            <p>4. Losing player gets -1 point.</p>
+            <p>5. You have 45 seconds to choose a number each round.</p>
+            <p>6. If you don't pick a number in time, you lose a point.</p>
+            <p>7. The game ends after 15 rounds or when a player reaches -10 points.</p>
+        </div>
+    </div>
+
+    <div id="startCountdown"></div>
+
+    <div id="game">
+        <div class="sidebar" id="player1Sidebar">
+            <h3 id="player1Name">Player 1</h3>
+            <p>Points: <span id="player1Points">0</span></p>
+        </div>
+        <div class="sidebar" id="player2Sidebar">
+            <h3 id="player2Name">Player 2</h3>
+            <p>Points: <span id="player2Points">0</span></p>
+        </div>
+        <div class="result" id="resultDisplay"></div>
+        <div id="countdown"></div>
+        <div id="numpad" class="numpad-container"></div>
+        <div id="message"></div> <!-- New message element -->
+    </div>
+
+    <script>
+        const socket = new WebSocket('ws://localhost:8080');
+        let gameCode, playerNumber, roundCount = 0;
+        let selectedNumber = null;
+        let countdownInterval = null;
+
+        document.getElementById('createGame').onclick = () => {
+            const username = prompt('Enter your username:');
+            if (username) {
+                socket.send(JSON.stringify({ type: 'create', username }));
+            }
+        };
+
+        document.getElementById('joinGame').onclick = () => {
+            const username = prompt('Enter your username:');
+            gameCode = document.getElementById('gameCodeInput').value;
+            if (username && gameCode) {
+                socket.send(JSON.stringify({ type: 'join', gameCode, username }));
+            }
+        };
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            switch (data.type) {
+                case 'gameCode':
+                    gameCode = data.gameCode;
+                    document.getElementById('codeDisplay').innerText = `Game Code: ${gameCode}`;
+                    break;
+
+                case 'start':
+                    handleGameStart(data);
+                    break;
+
+                case 'roundStart':
+                    handleRoundStart();
+                    break;
+
+                case 'result':
+                    handleResult(data);
+                    break;
+
+                case 'timeout':
+                    handleTimeout(data);
+                    break;
+
+                case 'gameOver':
+                    handleGameOver(data);
+                    break;
+            }
+        };
+
+        function handleGameStart(data) {
+            playerNumber = data.playerNumber;
+            document.getElementById('setup').style.display = 'none';
+            document.getElementById('game').style.display = 'block';
+            document.getElementById('player1Name').innerText = data.playerNumber === 1 ? 'You' : data.opponent;
+            document.getElementById('player2Name').innerText = data.playerNumber === 2 ? 'You' : data.opponent;
+            prepareNumpad();
+        }
+
+        function prepareNumpad() {
+            const numpad = document.getElementById('numpad');
+            numpad.innerHTML = '';
+            for (let i = 0; i <= 100; i++) {
+                const button = document.createElement('button');
+                button.innerText = i;
+                button.className = 'number';
+                button.onclick = () => selectNumber(i, button);
+                numpad.appendChild(button);
+            }
+        }
+
+        function handleRoundStart() {
+            selectedNumber = null;
+            document.querySelectorAll('.number').forEach(btn => {
+                btn.classList.remove('selected-number');
+                btn.disabled = false;
+            });
+            startCountdown(45);
+        }
+
+        function startCountdown(seconds) {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+
+            const countdownElement = document.getElementById('countdown');
+            countdownElement.innerText = `Time Left: ${seconds}s`;
+
+            countdownInterval = setInterval(() => {
+                seconds--;
+                countdownElement.innerText = `Time Left: ${seconds}s`;
+
+                if (seconds <= 0) {
+                    clearInterval(countdownInterval);
+                    countdownElement.innerText = '';
+                    socket.send(JSON.stringify({ type: 'timeout', gameCode, playerNumber }));
+                }
+            }, 1000);
+        }
+
+        function selectNumber(number, button) {
+            selectedNumber = number;
+            document.querySelectorAll('.number').forEach(btn => btn.disabled = true);
+            button.classList.add('selected-number');
+            socket.send(JSON.stringify({ type: 'number', gameCode, playerNumber, number }));
+        }
+
+        function handleTimeout(data) {
+            const { scores } = data;
+            document.getElementById('player1Points').innerText = scores[0];
+            document.getElementById('player2Points').innerText = scores[1];
+            document.getElementById('message').innerText = `Time's up! Points updated.`;
+            setTimeout(() => handleRoundStart(), 2000); // Restart new round
+        }
+
+        function handleResult(data) {
+            const { numbers, average, target, winner, scores } = data;
+            const resultDisplay = document.getElementById('resultDisplay');
+            resultDisplay.innerHTML = `
+                <h3>Round Results</h3>
+                <p>Player 1 chose: ${numbers[0]}</p>
+                <p>Player 2 chose: ${numbers[1]}</p>
+                <p>Average: ${average.toFixed(2)}</p>
+                <p>Target: ${target.toFixed(2)}</p>
+                <p>Winner: Player ${winner}</p>`;
+            document.getElementById('player1Points').innerText = scores[0];
+            document.getElementById('player2Points').innerText = scores[1];
+            setTimeout(() => handleRoundStart(), 2000); // Restart new round
+        }
+
+        function handleGameOver(data) {
+            window.alert(`Game Over! Winner: ${data.winner}`);
+            location.reload();
+        }
+    </script>
+</body>
+
+</html>

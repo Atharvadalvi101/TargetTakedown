@@ -1,0 +1,19 @@
+{
+  "name": "websocket-game-server",
+  "version": "1.0.0",
+  "description": "A WebSocket-based game server",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "open": "^10.1.0",
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=14.x"
+  },
+  "license": "MIT"
+}
